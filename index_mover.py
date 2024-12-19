@@ -159,7 +159,10 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import appdirs as ad
+
+# Override appdirs cache directory for Streamlit Cloud
 ad.user_cache_dir = lambda *args: "/tmp"
+
 # App title
 st.title("NSE Index Movers")
 
@@ -218,7 +221,7 @@ def fetch_live_data(symbols):
             })
         except Exception as e:
             st.warning(f"Could not fetch live data for {symbol}: {e}")
-    return pd.DataFrame(live_data)
+    return pd.DataFrame(live_data)  # Ensure DataFrame format
 
 def calculate_changes(data, timeframe, live_price, previous_close, live_volume=None):
     """Calculate percentage changes based on current price and volume."""
@@ -282,16 +285,18 @@ if st.sidebar.button("Analyze"):
     results = {"Price": [], "Volume": []}
     
     live_data = fetch_live_data(stocks)
+    st.write(live_data)  # Debugging: Display live data for verification
     
     for stock in stocks:
         data = fetch_stock_data(stock, start_date, end_date)
         live_price_row = live_data[live_data["Stock"] == stock]
-        if not live_price_row.empty:
-            live_price = live_price_row["Current Price"].values[0]
-            previous_close = live_price_row["Previous Close"].values[0]
-            live_volume = live_price_row["Live Volume"].values[0]  # Get live volume
-        else:
-            live_price, previous_close, live_volume = None, None, None
+        if live_price_row.empty:
+            st.warning(f"No live data available for {stock}")
+            continue
+
+        live_price = live_price_row["Current Price"].values[0]
+        previous_close = live_price_row["Previous Close"].values[0]
+        live_volume = live_price_row["Live Volume"].values[0]
 
         if not data.empty and len(data) > 1 and live_price is not None and previous_close is not None:
             price_change, volume_change = calculate_changes(data, timeframe, live_price, previous_close, live_volume)
@@ -310,6 +315,3 @@ if st.sidebar.button("Analyze"):
 
     st.subheader(f"{timeframe} Volume Change Heatmap")
     create_heatmap(results["Volume"], f"{timeframe} Volume Change Heatmap")
-
-# Footer
-# st.sidebar.info("Bui" )
