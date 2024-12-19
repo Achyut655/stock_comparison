@@ -154,10 +154,13 @@
 
 import streamlit as st
 import pandas as pd
+
 import yfinance as yf
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import appdirs as ad
+ad.user_cache_dir = lambda *args: "/tmp"
 
 # App title
 st.title("NSE Index Movers")
@@ -199,25 +202,17 @@ def fetch_live_data(symbols):
         full_symbol = f"{symbol}.NS"
         try:
             stock = yf.Ticker(full_symbol)
-            current_price = stock.info.get("currentPrice", None)
-            if current_price is None:
-                current_price = stock.history(period="1d")["Close"].iloc[-1]
-            previous_close = stock.info.get("previousClose", None)
-            live_volume = stock.info.get("volume", None)  # Fetch live volume
-            
-            # Fallback if live volume data is unavailable
-            if live_volume is None:
-                live_volume = stock.history(period="1d")["Volume"].iloc[-1]
-            
+            current_price = stock.history(period="1d")["Close"].iloc[-1]
+            previous_close = stock.history(period="2d")["Close"].iloc[0]
             live_data.append({
                 "Stock": symbol,
                 "Current Price": current_price,
-                "Previous Close": previous_close,
-                "Live Volume": live_volume  # Include live volume
+                "Previous Close": previous_close
             })
         except Exception as e:
             st.warning(f"Could not fetch live data for {symbol}: {e}")
     return pd.DataFrame(live_data)
+
 
 def calculate_changes(data, timeframe, live_price, previous_close, live_volume=None):
     """Calculate percentage changes based on current price and volume."""
