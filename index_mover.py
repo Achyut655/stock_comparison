@@ -159,8 +159,6 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import appdirs as ad
-import os
-os.system("streamlit run index_mover.py --server.port $PORT")
 
 # Override appdirs cache directory for Streamlit Cloud
 ad.user_cache_dir = lambda *args: "/tmp"
