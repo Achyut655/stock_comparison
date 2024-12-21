@@ -12,7 +12,7 @@ st.title("NSE Index Movers")
 st.sidebar.header("Index Movers Settings")
 index_name = st.sidebar.selectbox("Select NSE Index", ["NIFTY_50", "NIFTY_BANK"])
 timeframe = st.sidebar.radio("Select Timeframe", ["Daily", "Weekly", "Monthly"])
-start_date = st.sidebar.date_input("Start Date", pd.Timestamp.now() - pd.Timedelta(days=90))
+start_date = st.sidebar.date_input("Start Date", pd.Timestamp.now() - pd.Timedelta(days=30))
 end_date = st.sidebar.date_input("End Date", pd.Timestamp.now())
 
 # Index-wise stocks
