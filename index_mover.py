@@ -12,8 +12,15 @@ st.title("NSE Index Movers")
 st.sidebar.header("Index Movers Settings")
 index_name = st.sidebar.selectbox("Select NSE Index", ["NIFTY_50", "NIFTY_BANK"])
 timeframe = st.sidebar.radio("Select Timeframe", ["Daily", "Weekly", "Monthly"])
-start_date = st.sidebar.date_input("Start Date", pd.Timestamp.now() - pd.Timedelta(days=30))
 end_date = st.sidebar.date_input("End Date", pd.Timestamp.now())
+
+# Adjust start_date based on the timeframe
+if timeframe == "Daily":
+    start_date = end_date - pd.Timedelta(days=1)
+elif timeframe == "Weekly":
+    start_date = end_date - pd.Timedelta(days=7)
+else:  # Monthly
+    start_date = end_date - pd.Timedelta(days=30)
 
 # Index-wise stocks
 nse_indices = {
@@ -69,8 +76,11 @@ def calculate_changes(data, timeframe):
     return price_change_pct, volume_change_pct
 
 def create_heatmap(data, title, cmap="RdYlGn"):
-    """Generate a 2D heatmap with stock names and values."""
-    n_rows, n_cols = 6, 9  # Adjust grid dimensions as needed
+    """Generate a heatmap dynamically based on the number of stocks."""
+    n_stocks = len(data)
+    n_cols = 9  # Fixed number of columns
+    n_rows = (n_stocks + n_cols - 1) // n_cols  # Calculate rows dynamically
+
     heatmap_data = np.full((n_rows, n_cols), np.nan)
     heatmap_labels = np.full((n_rows, n_cols), "", dtype=object)
 
@@ -80,7 +90,7 @@ def create_heatmap(data, title, cmap="RdYlGn"):
             heatmap_data[row_index, col_index] = row["Value"]
             heatmap_labels[row_index, col_index] = f"{row['Stock']}\n{row['Value']:.2f}%"
 
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(n_cols, n_rows))
     sns.heatmap(
         heatmap_data,
         annot=heatmap_labels,
@@ -100,14 +110,17 @@ if st.sidebar.button("Analyze"):
     stocks = nse_indices.get(index_name, [])
     results = {"Price": [], "Volume": []}
 
-    for stock in stocks:
-        data = fetch_stock_data(stock, start_date, end_date)
-        if not data.empty:
-            price_change, volume_change = calculate_changes(data, timeframe)
-            if price_change is not None:
-                results["Price"].append({"Stock": stock, "Value": price_change})
-            if volume_change is not None:
-                results["Volume"].append({"Stock": stock, "Value": volume_change})
+    batch_size = 10  # Process in batches to reduce memory usage
+    for i in range(0, len(stocks), batch_size):
+        batch_stocks = stocks[i:i+batch_size]
+        for stock in batch_stocks:
+            data = fetch_stock_data(stock, start_date, end_date)
+            if not data.empty:
+                price_change, volume_change = calculate_changes(data, timeframe)
+                if price_change is not None:
+                    results["Price"].append({"Stock": stock, "Value": price_change})
+                if volume_change is not None:
+                    results["Volume"].append({"Stock": stock, "Value": volume_change})
 
     # Sort results in descending order
     for key in results:
