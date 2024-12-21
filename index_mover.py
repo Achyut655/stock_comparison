@@ -4,8 +4,6 @@ import yfinance as yf
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import appdirs as ad
-ad.user_cache_dir = lambda *args: "/tmp"
 
 # App title
 st.title("NSE Index Movers")
@@ -40,28 +38,14 @@ def fetch_stock_data(ticker, start, end):
         st.warning(f"Could not fetch data for {ticker}: {e}")
         return pd.DataFrame()
 
-def fetch_static_data():
-    """Fetch mock live data for all stocks."""
-    static_data = {
-        stock: {
-            "Current Price": np.random.uniform(100, 4000),
-            "Previous Close": np.random.uniform(100, 4000),
-            "Live Volume": np.random.randint(100000, 5000000)
-        }
-        for stock in nse_indices["NIFTY_50"] + nse_indices["NIFTY_BANK"]
-    }
-    return static_data
-
-def calculate_changes(data, timeframe, live_price, previous_close, live_volume=None):
-    """Calculate percentage changes based on current price and volume."""
-    if data.empty or len(data) <= 1 or live_price is None or previous_close is None:
+def calculate_changes(data, timeframe):
+    """Calculate percentage changes based on historical data."""
+    if data.empty or len(data) <= 1:
         return None, None
 
-    current_price = live_price
-
     if timeframe == "Daily":
-        reference_price = previous_close
-        reference_volume = live_volume  # Use live volume for daily timeframe
+        reference_price = data["Close"].iloc[-2]
+        reference_volume = data["Volume"].iloc[-2]
     elif timeframe == "Weekly":
         if len(data) < 5:
             return None, None
@@ -73,10 +57,13 @@ def calculate_changes(data, timeframe, live_price, previous_close, live_volume=N
         reference_price = data["Close"].iloc[-21:].mean()
         reference_volume = data["Volume"].iloc[-21:].mean()
 
+    current_price = data["Close"].iloc[-1]
+    current_volume = data["Volume"].iloc[-1]
+
     price_change_pct = ((current_price - reference_price) / reference_price) * 100
     volume_change_pct = (
-        ((reference_volume - data["Volume"].iloc[-1]) / data["Volume"].iloc[-1]) * 100
-        if data["Volume"].iloc[-1] != 0
+        ((current_volume - reference_volume) / reference_volume) * 100
+        if reference_volume != 0
         else 0
     )
     return price_change_pct, volume_change_pct
@@ -113,19 +100,10 @@ if st.sidebar.button("Analyze"):
     stocks = nse_indices.get(index_name, [])
     results = {"Price": [], "Volume": []}
 
-    live_data = fetch_static_data()
-
     for stock in stocks:
         data = fetch_stock_data(stock, start_date, end_date)
-        if stock in live_data:
-            live_price = live_data[stock]["Current Price"]
-            previous_close = live_data[stock]["Previous Close"]
-            live_volume = live_data[stock]["Live Volume"]  # Get live volume
-        else:
-            live_price, previous_close, live_volume = None, None, None
-
-        if not data.empty and len(data) > 1 and live_price is not None and previous_close is not None:
-            price_change, volume_change = calculate_changes(data, timeframe, live_price, previous_close, live_volume)
+        if not data.empty:
+            price_change, volume_change = calculate_changes(data, timeframe)
             if price_change is not None:
                 results["Price"].append({"Stock": stock, "Value": price_change})
             if volume_change is not None:
@@ -141,6 +119,3 @@ if st.sidebar.button("Analyze"):
 
     st.subheader(f"{timeframe} Volume Change Heatmap")
     create_heatmap(results["Volume"], f"{timeframe} Volume Change Heatmap")
-
-# Footer
-# st.sidebar.info("Bui")
