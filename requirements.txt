@@ -1,7 +1,0 @@
-streamlit==1.25.0
-pandas==1.5.3
-yfinance==0.2.31
-numpy==1.24.4
-seaborn==0.12.2
-matplotlib==3.8.1
-appdirs==1.4.4
