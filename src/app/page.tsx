@@ -1,15 +1,11 @@
 import { Suspense } from "react";
-import {
-  getLoginUrl,
-  handleApiSession,
-  handleMultipleStocks,
-} from "../lib/breeze/actions";
+import { getLoginUrl, handleMultipleStocks } from "../lib/breeze/actions";
 import { ComparisonData } from "../lib/breeze/stock";
 import { STOCK_INDICES, IndexType } from "@/lib/constants";
 import { MarketClosedError, UnauthorizedError } from "@/lib/breeze/types";
 
 function ErrorMessage({ error }: { error: Error }) {
-  let message = error.message;
+  const message = error.message;
   let action = null;
 
   if (error instanceof MarketClosedError) {
@@ -32,33 +28,6 @@ function ErrorMessage({ error }: { error: Error }) {
       <p>{message}</p>
       {action}
     </div>
-  );
-}
-
-function StockForm({
-  defaultValue,
-  apisession,
-}: {
-  defaultValue: string;
-  apisession: string;
-}) {
-  return (
-    <form className="mb-4">
-      <input type="hidden" name="apisession" value={apisession} />
-      <input
-        type="text"
-        name="stock"
-        defaultValue={defaultValue}
-        placeholder="Enter stock code (e.g., NIFTY)"
-        className="border p-2 mr-2"
-      />
-      <button
-        type="submit"
-        className="bg-blue-500 text-white px-4 py-2 rounded"
-      >
-        Update Stock
-      </button>
-    </form>
   );
 }
 

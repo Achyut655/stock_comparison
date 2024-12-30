@@ -26,27 +26,27 @@ interface HistoricalDataResponse {
   Status: number;
 }
 
-interface QuoteResponse {
-  Success: Array<{
-    exchange_code: string;
-    stock_code: string;
-    ltp: number;
-    ltt: string;
-    volume: string;
-    best_bid_price: number;
-    best_bid_quantity: string;
-    best_offer_price: number;
-    best_offer_quantity: string;
-    open: number;
-    high: number;
-    low: number;
-    previous_close: number;
-    ltp_percent_change: number;
-    total_quantity_traded: string;
-  }>;
-  Status: number;
-  Error: string | null;
-}
+// interface QuoteResponse {
+//   Success: Array<{
+//     exchange_code: string;
+//     stock_code: string;
+//     ltp: number;
+//     ltt: string;
+//     volume: string;
+//     best_bid_price: number;
+//     best_bid_quantity: string;
+//     best_offer_price: number;
+//     best_offer_quantity: string;
+//     open: number;
+//     high: number;
+//     low: number;
+//     previous_close: number;
+//     ltp_percent_change: number;
+//     total_quantity_traded: string;
+//   }>;
+//   Status: number;
+//   Error: string | null;
+// }
 
 export class BreezeAPI {
   private baseUrl = "https://api.icicidirect.com";
